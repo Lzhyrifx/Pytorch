@@ -38,7 +38,7 @@ if __name__ == '__main__':
     model = model.to(device)
     model.eval()  # 切换模型为测试模式
 
-    image = cv2.imread('image/x.png')  # 读取图片
+    image = cv2.imread('Image/x.png')  # 读取图片
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # 灰度处理
     _, img = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)  # 二值化
