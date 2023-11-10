@@ -16,10 +16,10 @@ print("test set :", test_set[0].size())
 
 
 def convert_to_img(train=True):
-    if (train):
+    if train:
         f = open(root + 'train.txt', 'w')
         data_path = root + '/train/'
-        if (not os.path.exists(data_path)):
+        if not os.path.exists(data_path):
             os.makedirs(data_path)
         for i, (img, label) in enumerate(zip(train_set[0], train_set[1])):
             img_path = data_path + str(i) + '.jpg'

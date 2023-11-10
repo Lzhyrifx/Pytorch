@@ -3,11 +3,12 @@ from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision import datasets
+import torch.nn as nn
 
-batch_size = 64
-learning_rate = 0.01
-momentum = 0.5
-EPOCH = 30
+batch_size = 64  # 批量大小
+learning_rate = 0.01  # 学习率
+momentum = 0.5  # 动量
+EPOCH = 20  # 迭代次数
 X = []
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -18,34 +19,41 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-class Net(torch.nn.Module):
+class LeNet5(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = torch.nn.Sequential(
-            torch.nn.Conv2d(1, 10, kernel_size=5),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(kernel_size=2),
-        )
-        self.conv2 = torch.nn.Sequential(
-            torch.nn.Conv2d(10, 20, kernel_size=5),
-            torch.nn.ReLU(),
-            torch.nn.MaxPool2d(kernel_size=2),
-        )
-        self.fc = torch.nn.Sequential(
-            torch.nn.Linear(320, 50),
-            torch.nn.Linear(50, 10),
-        )
+        super(LeNet5, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=5)
+        self.bn1 = nn.BatchNorm2d(6)
+        self.relu1 = nn.ReLU()
+        self.maxpool1 = nn.MaxPool2d(kernel_size=2)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        self.bn2 = nn.BatchNorm2d(16)
+        self.relu2 = nn.ReLU()
+        self.maxpool2 = nn.MaxPool2d(kernel_size=2)
+        self.fc1 = nn.Linear(16 * 4 * 4, 120)
+        self.bn3 = nn.BatchNorm1d(120)
+        self.relu3 = nn.ReLU()
+        self.fc2 = nn.Linear(120, 84)
+        self.bn4 = nn.BatchNorm1d(84)
+        self.relu4 = nn.ReLU()
+        self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        batch_size = x.size(0)
-        x = self.conv1(x)  # 一层卷积层,一层池化层,一层激活层(图是先卷积后激活再池化，差别不大)
-        x = self.conv2(x)  # 再来一次
-        x = x.view(batch_size, -1)  # flatten 变成全连接网络需要的输入 (batch, 20,4,4) ==> (batch,320), -1 此处自动算出的是320
-        x = self.fc(x)
-        return x  # 最后输出的是维度为10的，也就是（对应数学符号的0~9）
+        x = self.conv1(x)
+        x = self.relu1(x)
+        x = self.maxpool1(x)
+        x = self.conv2(x)
+        x = self.relu2(x)
+        x = self.maxpool2(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.relu3(x)
+        x = self.fc2(x)
+        x = self.relu4(x)
+        x = self.fc3(x)
+        return x
 
-
-model = Net()
+model = LeNet5()
 model = model.cuda()
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -86,7 +94,7 @@ def train():
 def test():
     correct = 0
     total = 0
-    with torch.no_grad():  # 测试集不用算梯度
+    with torch.no_grad():
         for data in test_loader:
             images, labels = data
             images = images.cuda()
